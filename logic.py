@@ -1,7 +1,7 @@
 import requests
 from requests.structures import CaseInsensitiveDict
 from datetime import datetime, timedelta
-from API.login import headers
+from login import headers
 
 
 class Getters:
@@ -189,49 +189,71 @@ class GetObjectInfo:
             self.headers = head
         else:
             raise ValueError('Headers must be a dict')
-        self.params = self._setparam(key, **params)
+        self.params = self.__setparam(key, **params)
 
     @staticmethod
-    def _setparam(key, **params):
+    def __setparam(key, name1=None, name2=None, lang='ru', top=10, obj_id=None):
+        result = ''
         if key == 'config':
-            return GetObjectInfo.__config(**params)
+            return GetObjectInfo.__string(name1, 'name')
         elif key == 'search by pattern':
-            return GetObjectInfo.__search_by_pattern(**params)
-        elif key == 'colors':
-            return GetObjectInfo.__colors(**params)
-        elif key == 'gender':
-            return GetObjectInfo.__gender(**params)
-
-    @staticmethod
-    def __config(name):
-        if isinstance(name, str):
-            return f'name={name}'
-        else:
-            raise ValueError('Name must be a string')
-
-    @staticmethod
-    def __search_by_pattern(name, parent, lang='ru'):
-        if all(isinstance(x, str) for x in (name, parent, lang)):
-            result = ''.join(f'pattern={name}&lang={lang}&parent={parent}')
+            if name1 is not None:
+                result = GetObjectInfo.__string(name1, 'pattern')
+            if name2 is not None:
+                result += GetObjectInfo.__checker(result)
+                result += GetObjectInfo.__string(name2, 'parent')
+            result += "&" + GetObjectInfo.__string(lang, 'lang')
             return result
-        else:
-            raise ValueError('All args must be a string')
+        elif key in GetObjectInfo.SAME_KEYS_LIST:
+            result = GetObjectInfo.__integer(top, 'top')
+            if name1 is not None:
+                result += '&' + GetObjectInfo.__string(name1, 'pattern')
+            if obj_id is not None:
+                result += '&' + GetObjectInfo.__integer(obj_id, 'id')
+            return result
+        elif key == 'list':
+            return ''
+        elif key == 'tnved':
+            if obj_id is not None:
+                result = GetObjectInfo.__integer(obj_id, 'subjectID')
+            if name1 is not None:
+                result += GetObjectInfo.__checker(result)
+                result += GetObjectInfo.__string(name1, 'subject')
+            if name2 is not None:
+                result += GetObjectInfo.__checker(result)
+                result += GetObjectInfo.__string(name2, 'pattern')
+            return result
+        elif key == 'ext':
+            result = GetObjectInfo.__integer(top, 'top')
+            if name1 is not None:
+                result += '&' + GetObjectInfo.__string(name1, 'pattern')
+            if obj_id is not None:
+                result += '&' + GetObjectInfo.__integer(obj_id, 'id')
+            if name2 is not None:
+                result += '&' + GetObjectInfo.__string(name2, 'option')
+            return result
 
     @staticmethod
-    def __colors(top=100, pattern=None, obj_id=None):
-        if isinstance(top, int):
-            result = ''.join(f'top={top}')
+    def __integer(param, param_name):
+        if isinstance(param, int):
+            result = f'{param_name}={param}'
         else:
-            raise ValueError('tom must be an int')
-        if isinstance(pattern, str):
-            result += ''.join(f'&pattern={pattern}')
-        elif not isinstance(pattern, (str, type(None))):
-            raise ValueError('Pattern must be string or none')
-        if isinstance(obj_id, int):
-            result += ''.join(f'&{obj_id}')
-        elif not isinstance(obj_id, (int, type(None))):
-            raise ValueError('Id must be an int')
+            raise ValueError(f'{param_name} must be an int')
         return result
+
+    @staticmethod
+    def __string(param, param_name):
+        if isinstance(param, str):
+            result = f'{param_name}={param}'
+        else:
+            raise ValueError(f'{param_name} must be a string')
+        return result
+
+    @staticmethod
+    def __checker(string):
+        if string != 0:
+            string += '&'
+        return string
 
     def response(self):
         """
@@ -243,9 +265,23 @@ class GetObjectInfo:
                                 headers=self.headers)
         return response.json()
 
+    SAME_KEYS_LIST = ['gender', 'colors', 'countries', 'collections', 'seasons', 'contents',
+                      'consists', 'options', 'si']
+
     __KEYS = {
         'config': 'https://suppliers-api.wildberries.ru/api/v1/config/get/object/translated?',
         'search by pattern': "https://suppliers-api.wildberries.ru/api/v1/config/get/object/list?",
         'colors': 'https://suppliers-api.wildberries.ru/api/v1/directory/colors?',
-        'gender': 'https://suppliers-api.wildberries.ru/api/v1/directory/kinds?'
+        'gender': 'https://suppliers-api.wildberries.ru/api/v1/directory/kinds?',
+        'countries': 'https://suppliers-api.wildberries.ru/api/v1/directory/countries?',
+        'collections': 'https://suppliers-api.wildberries.ru/api/v1/directory/collections?',
+        'seasons': 'https://suppliers-api.wildberries.ru/api/v1/directory/seasons?',
+        'contents': 'https://suppliers-api.wildberries.ru/api/v1/directory/contents?',
+        'consists': 'https://suppliers-api.wildberries.ru/api/v1/directory/consists?',
+        'tnved': 'https://suppliers-api.wildberries.ru/api/v1/directory/tnved?',
+        'options': 'https://suppliers-api.wildberries.ru/api/v1/directory/options?',
+        'brands': 'https://suppliers-api.wildberries.ru/api/v1/directory/brands?',
+        'si': 'https://suppliers-api.wildberries.ru/api/v1/directory/si?',
+        'list': 'https://suppliers-api.wildberries.ru/api/v1/directory/get/list',
+        'ext': 'https://suppliers-api.wildberries.ru/api/v1/directory/ext',
               }

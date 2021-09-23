@@ -1,7 +1,8 @@
-from API.logic import Getters, GetObjectInfo
-from API.login import headers
+from logic import Getters, GetObjectInfo
+from login import headers
 
-orders = 'colors'
-get_orders = GetObjectInfo(orders, headers, pattern='Красный')
+gender = 'colors'
+
+get_orders = GetObjectInfo(gender, headers)
 print(get_orders.response())
 
