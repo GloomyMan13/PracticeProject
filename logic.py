@@ -4,6 +4,28 @@ from datetime import datetime, timedelta
 from login import headers
 import tablib
 
+KEYS = {
+        'orders': 'https://suppliers-api.wildberries.ru/api/v2/orders?',
+        'warehouses': "https://suppliers-api.wildberries.ru/api/v2/warehouses?",
+        'costs': "https://suppliers-api.wildberries.ru/public/api/v1/info?",
+        'stocks': "https://suppliers-api.wildberries.ru/api/v2/stocks?",
+        'config': 'https://suppliers-api.wildberries.ru/api/v1/config/get/object/translated?',
+        'search by pattern': "https://suppliers-api.wildberries.ru/api/v1/config/get/object/list?",
+        'colors': 'https://suppliers-api.wildberries.ru/api/v1/directory/colors?',
+        'gender': 'https://suppliers-api.wildberries.ru/api/v1/directory/kinds?',
+        'countries': 'https://suppliers-api.wildberries.ru/api/v1/directory/countries?',
+        'collections': 'https://suppliers-api.wildberries.ru/api/v1/directory/collections?',
+        'seasons': 'https://suppliers-api.wildberries.ru/api/v1/directory/seasons?',
+        'contents': 'https://suppliers-api.wildberries.ru/api/v1/directory/contents?',
+        'consists': 'https://suppliers-api.wildberries.ru/api/v1/directory/consists?',
+        'tnved': 'https://suppliers-api.wildberries.ru/api/v1/directory/tnved?',
+        'options': 'https://suppliers-api.wildberries.ru/api/v1/directory/options?',
+        'brands': 'https://suppliers-api.wildberries.ru/api/v1/directory/brands?',
+        'si': 'https://suppliers-api.wildberries.ru/api/v1/directory/si?',
+        'list': 'https://suppliers-api.wildberries.ru/api/v1/directory/get/list',
+        'ext': 'https://suppliers-api.wildberries.ru/api/v1/directory/ext'
+    }
+
 
 class Getters:
     """
@@ -24,7 +46,7 @@ class Getters:
 
         try:
             key = key.lower()
-            self.link = self.__KEYS[key]
+            self.link = KEYS[key]
         except KeyError:
             print("Wrong keyword")
         except AttributeError:
@@ -175,28 +197,6 @@ class Getters:
                                 headers=self.headers)
         return response.json()
 
-    __KEYS = {
-        'orders': 'https://suppliers-api.wildberries.ru/api/v2/orders?',
-        'warehouses': "https://suppliers-api.wildberries.ru/api/v2/warehouses?",
-        'costs': "https://suppliers-api.wildberries.ru/public/api/v1/info?",
-        'stocks': "https://suppliers-api.wildberries.ru/api/v2/stocks?",
-        'config': 'https://suppliers-api.wildberries.ru/api/v1/config/get/object/translated?',
-        'search by pattern': "https://suppliers-api.wildberries.ru/api/v1/config/get/object/list?",
-        'colors': 'https://suppliers-api.wildberries.ru/api/v1/directory/colors?',
-        'gender': 'https://suppliers-api.wildberries.ru/api/v1/directory/kinds?',
-        'countries': 'https://suppliers-api.wildberries.ru/api/v1/directory/countries?',
-        'collections': 'https://suppliers-api.wildberries.ru/api/v1/directory/collections?',
-        'seasons': 'https://suppliers-api.wildberries.ru/api/v1/directory/seasons?',
-        'contents': 'https://suppliers-api.wildberries.ru/api/v1/directory/contents?',
-        'consists': 'https://suppliers-api.wildberries.ru/api/v1/directory/consists?',
-        'tnved': 'https://suppliers-api.wildberries.ru/api/v1/directory/tnved?',
-        'options': 'https://suppliers-api.wildberries.ru/api/v1/directory/options?',
-        'brands': 'https://suppliers-api.wildberries.ru/api/v1/directory/brands?',
-        'si': 'https://suppliers-api.wildberries.ru/api/v1/directory/si?',
-        'list': 'https://suppliers-api.wildberries.ru/api/v1/directory/get/list',
-        'ext': 'https://suppliers-api.wildberries.ru/api/v1/directory/ext'
-    }
-
     SAME_KEYS_LIST = ['gender', 'colors', 'countries', 'collections', 'seasons', 'contents',
                       'consists', 'options', 'si']
 
@@ -211,6 +211,6 @@ class Converter:
         dataset = tablib.Dataset()
         dataset.dict = self.json
         with open(self.path, 'wb') as file:
-            file.write(dataset.xls)
+            file.write(dataset.xlsx)
         return 'Done'
 
