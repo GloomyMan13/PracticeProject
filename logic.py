@@ -1,8 +1,11 @@
+import os
+import os.path as path
 import requests
 from requests.structures import CaseInsensitiveDict
 from datetime import datetime, timedelta
+import pandas as pd
 from login import headers
-import tablib
+
 
 KEYS = {
         'orders': 'https://suppliers-api.wildberries.ru/api/v2/orders?',
@@ -22,8 +25,7 @@ KEYS = {
         'options': 'https://suppliers-api.wildberries.ru/api/v1/directory/options?',
         'brands': 'https://suppliers-api.wildberries.ru/api/v1/directory/brands?',
         'si': 'https://suppliers-api.wildberries.ru/api/v1/directory/si?',
-        'list': 'https://suppliers-api.wildberries.ru/api/v1/directory/get/list',
-        'ext': 'https://suppliers-api.wildberries.ru/api/v1/directory/ext'
+        'list': 'https://suppliers-api.wildberries.ru/api/v1/directory/get/list'
     }
 
 
@@ -133,14 +135,6 @@ class Getters:
             if pattern is not None:
                 result += Getters.__checker(result)
                 result += Getters.__string(pattern, 'pattern')
-        elif key == 'ext':
-            result = Getters.__integer(top, 'top')
-            if pattern is not None:
-                result += '&' + Getters.__string(pattern, 'pattern')
-            if obj_id is not None:
-                result += '&' + Getters.__integer(obj_id, 'id')
-            if pattern is not None:
-                result += '&' + Getters.__string(pattern, 'option')
         return result
 
     @staticmethod
@@ -202,15 +196,44 @@ class Getters:
 
 
 class Converter:
-    def __init__(self, path, key, json):
-        self.path = path
-        self.key = key
-        self.json = json
+    """
+    Converts
+    """
+    def __init__(self, my_path, key, json):
+        self.path = path.normpath(my_path)
+        if key in KEYS.keys():
+            self.key = key
+        else:
+            raise AttributeError('Wrong command key')
+        self.json = Converter.__keygen(self.key, json)
+
+    @staticmethod
+    def __keygen(key, json):
+        json_keys = list(json.keys())
+        print(json)
+        if json['error']:
+            raise AttributeError(json['errorText'])
+        elif json['data'] is None or json['data'] == []:
+            print(key)
+            raise ValueError('Data is none')
+        else:
+            print(json)
+            print(key)
+            EXCEPTION_LIST = ['config', 'search by pattern', 'colors', 'gender', 'countries', 'collections', 'seasons',
+                              'contents', 'consists', 'tnved', 'options', 'brands', 'si', 'list']
+            if key in EXCEPTION_LIST:
+                json = json['data']
+            else:
+                json = json[json_keys[0]]
+        return json
 
     def convert(self):
-        dataset = tablib.Dataset()
-        dataset.dict = self.json
-        with open(self.path, 'wb') as file:
-            file.write(dataset.xlsx)
+        dataset = pd.json_normalize(self.json)
+        my_path = path.split(self.path)[0]
+        if path.exists(my_path):
+            dataset.to_excel(self.path)
+        else:
+            os.makedirs(my_path)
+            dataset.to_excel(self.path)
         return 'Done'
 
