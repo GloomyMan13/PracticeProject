@@ -1,55 +1,53 @@
-import os.path as path
 import tkinter as tk
 import tkinter.messagebox as msgbox
 from tkinter.ttk import Combobox
 from tkinter import filedialog
-import logic
+from tkcalendar import DateEntry
 
-keys_list = list(logic.KEYS.keys())
+params = {
+        'orders': ['date_start', 'date_end', 'status', 'take', 'skip', 'order_id'],
+        'warehouses': None,
+        'costs': ['quantity'],
+        'stocks': ['search', 'sort', 'order'],
+        'config': ['name'],
+        'search by pattern': ['name', 'parent', 'lang'],
+        'tnved': ['obj_id', 'subject', 'pattern'],
+        'list': [],
+        'other': ['top', 'pattern', 'id']
+    }
+
+keys_list = list(params.keys())
 
 
 class Window(tk.Tk):
     def __init__(self):
         super().__init__()
-        self.title('MyApp')
-        self.geometry('600x500')
+        self.title('JSON to EXCEL')
+        self.geometry('600x100')
         self.text = tk.Text(self, height=10, width=50)
         self.new_file = None
+        self.path_txt = tk.Label(self)
+        self.path_txt.grid(column=4, row=1)
+
         label_text = tk.StringVar()
         label_text.set('Choose operation:')
-
 
         label = tk.Label(textvar=label_text, font=('Arial', 9))
         label.grid(column=0, row=1, padx=10)
 
-        box = Combobox()
-        box['values'] = keys_list
-        box.current(0)
-        box.grid(column=1, row=1, padx=10)
-        box.bind(0, Widgets)
+        self.func_box = Combobox()
+        self.func_box['values'] = keys_list
+        self.func_box.current(0)
+        self.func_box.grid(column=1, row=1, padx=10)
 
         file_button = tk.Button(self, text="Choose file", command=self.save_file)
         file_button.grid(column=3, row=1, padx=20)
-        reg = tk.Entry().register(Window.__changer_check)
 
-        self.path_txt = tk.Entry(self)
-        self.path_txt.grid(column=4, row=1)
-        self.path_txt.configure(validate='key', validatecommand=reg)
+        next_button = tk.Button(self, text='Next', command=self.start)
+        next_button.grid(column=3, row=2)
 
-
-        hello_button = tk.Button(self, text='Start', command=self.start)
-        hello_button.grid(column=4, row=2)
-
-        goodbye_button = tk.Button(self, text='Quit', command=self.exit)
-        goodbye_button.grid(column=3, row=2)
-
-    @staticmethod
-    def __changer_check(input):
-        if path.isfile(input):
-            return True
-        else:
-            return False
-
+        quit_button = tk.Button(self, text='Quit', command=self.exit)
+        quit_button.grid(column=0, row=2)
 
     def save_file(self):
         self.new_file = filedialog.asksaveasfile(title="Save file",
@@ -60,28 +58,81 @@ class Window(tk.Tk):
             string = str(self.new_file).replace("<_io.TextIOWrapper name='", '')
             del_index = string.index("' mode")
             string = string[0:del_index]
-            self.path_txt.delete(0, 256)
-            self.path_txt.insert(0, string)
-            self.new_file = self.path_txt
-            self.path_txt.configure(state='readonly')
-            return string
+            self.path_txt.configure(text=string)
+            self.new_file = string
 
     def start(self):
         if self.new_file is None:
             msgbox.showerror("ERROR", 'Filepath is not specified')
         else:
-            msgbox.showinfo('OK', 'All is ok')
+            wind = Widgets(self.func_box.get(), self.new_file)
+            wind.mainloop()
 
     def exit(self):
-        if msgbox.askokcancel("Close app?", "Would you like an app?"):
-            msgbox.showinfo("Goodbye!", "Sayonara")
-            self.after(2, self.destroy)
+        if msgbox.askokcancel("Close app?", "Would you like to close an app?"):
+            self.destroy()
         else:
-            msgbox.showinfo("Not closing", "We will stay with u")
+            pass
 
 
-class Widgets(tk.Tk):
-    def __init__(self):
+class Widgets(tk.Toplevel):
+    def __init__(self, key, path):
         super().__init__()
-        goodbye_button = tk.Button(self, text='Quit', command=self.exit)
-        goodbye_button.grid(column=2, row=2)
+        self.key = key
+        self.path = path
+        self.param_dict = {}
+        self.labels = Widgets.label_func(self)
+
+        self.goodbye_button = tk.Button(self, text='Cancel', command=self.cancel)
+        self.goodbye_button.grid(column=0, row=4)
+
+        self.start_button = tk.Button(self, text='Start', command=self.start_convert)
+        self.start_button.grid(column=3, row=4)
+
+    def label_func(self):
+        row = 0
+        column = 0
+        for element in params[self.key]:
+            el_key = element
+            if isinstance(element, dict):
+                el_key = list(element.keys())[0]
+            labeltext = el_key.replace('_', ' ')
+            labeltext[0].upper()
+            new_label = tk.Label(self, text=labeltext)
+            new_label.grid(column=column, row=row)
+            row += 1
+            if row > 3:
+                row = 0
+                column += 2
+
+    def create_fields(self):
+        if self.key == 'orders':
+            self.calendar_start_butt = tk.Button(self, text='Choose date', command=lambda: self.get_date('date_start'))
+            self.calendar_start_butt.grid(column=1, row=0)
+            self.calendar_end_butt = tk.Button(self, text='Choose date', command=lambda: self.get_date('date_end'))
+            self.calendar_end_butt.grid(column=1, row=1)
+            self.new_box = Combobox(self)
+            self.new_box['values'] = params[self.key][2]['status']
+            self.new_box.current(0)
+            self.new_box.grid(column=1, row=2)
+            return self.calendar_start_butt, self.calendar_end_butt, self.new_box
+
+
+    def cancel(self):
+        if msgbox.askokcancel('Close window?', 'Close window?'):
+            self.destroy()
+        else:
+            pass
+
+    def get_date(self, key):
+        cal_widget = DateEntry()
+        cal_widget.drop_down()
+        date = cal_widget.get_date()
+        self.param_dict[key] = date
+        print(self.param_dict)
+
+    def start_convert(self):
+        print(self.param_dict)
+        msgbox.showinfo("I'm starting with params: \n", self.param_dict)
+
+
