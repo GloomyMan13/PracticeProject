@@ -6,7 +6,8 @@ from datetime import datetime, timedelta
 import pandas as pd
 from login import headers
 
-
+RIGHT_SORT_LIST = ['subject', 'brand', 'name', 'size', 'barcode', 'articles']
+ORDER_LIST = ['asc', 'desc']
 KEYS = {
         'orders': 'https://suppliers-api.wildberries.ru/api/v2/orders?',
         'warehouses': "https://suppliers-api.wildberries.ru/api/v2/warehouses?",
@@ -112,9 +113,6 @@ class Getters:
             if order_id is not None:
                 result += '&' + Getters.__integer(order_id, 'id')
         elif key == 'stocks':
-            RIGHT_SORT_LIST = ['subject', 'brand', 'name', 'size',
-                               'barcode', 'articles']
-            ORDER_LIST = ['asc', 'desc']
             try:
                 search = param_dict['search']
             except KeyError:
@@ -138,7 +136,7 @@ class Getters:
             if sort in RIGHT_SORT_LIST:
                 result += '&' + Getters.__string(sort, 'sort')
             elif sort is not None and sort not in RIGHT_SORT_LIST:
-                raise ValueError(f'Sort must be one of {RIGHT_SORT_LIST}')
+                raise ValueError(f'Sort must be one of {RIGHT_SORT_LIST}, not {sort}')
             try:
                 order = param_dict['order']
             except KeyError:
@@ -146,7 +144,7 @@ class Getters:
             if order in ORDER_LIST:
                 result += '&' + Getters.__string(order, 'order')
             elif order is not None and order not in ORDER_LIST:
-                raise ValueError(f'Order must be one of {ORDER_LIST}')
+                raise ValueError(f'Order must be one of {ORDER_LIST}, not {order}')
         elif key == 'costs':
             QUANTITY_LIST = [1, 2, 0]
             try:
@@ -301,6 +299,9 @@ class Converter:
 
     @staticmethod
     def __keygen(key, json):
+        if key == 'warehouses':
+            print(json[0])
+            return json[0]
         json_keys = list(json.keys())
         if 'error' in json_keys:
             if json['error']:
@@ -317,6 +318,7 @@ class Converter:
         return json
 
     def convert(self):
+        print(self.json)
         dataset = pd.json_normalize(self.json)
         my_path = path.split(self.path)[0]
         if path.exists(my_path):
