@@ -1,4 +1,3 @@
-import _tkinter
 import datetime
 import tkinter as tk
 import tkinter.messagebox as msgbox
@@ -130,7 +129,8 @@ class CalendarDialog(tk.Toplevel):
 class Widgets(tk.Toplevel):
     def __init__(self, key, path):
         super().__init__()
-
+        self.key = key
+        self.path = path
         self.param_dict = {}
 
         self.goodbye_button = tk.Button(self, text='Cancel', command=self.cancel)
@@ -294,6 +294,8 @@ class Stocks(Widgets):
         if Widgets.param_checker(self):
             Widgets.saving(self)
 
+
 class Cost(Widgets):
     def __init__(self, key, path):
         super().__init__(key, path)
+
