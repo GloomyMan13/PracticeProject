@@ -1,8 +1,8 @@
 import datetime
 import tkinter as tk
+from tkinter import filedialog
 import tkinter.messagebox as msgbox
 from tkinter.ttk import Combobox
-from tkinter import filedialog
 from tkcalendar import Calendar
 import errors
 import logic
@@ -35,17 +35,15 @@ class Window(tk.Tk):
     Main window class, inherit tkinter.Tk()
 
     Attributes:
-    -----------
-        title: str
-               title of window
-        geometry: str
-                  window size
+        self.title: str
+                    title of window
+        self.geometry: str
+                       window size
         text: tk.Text
               places path to window
         new_file: str
                   contains path
     Widgets:
-    --------
         path_txt: tkinter.Label
                   Used for print chosen path
         op_label: tkinter.Label
@@ -59,7 +57,6 @@ class Window(tk.Tk):
         quit_button: tkinter.Button
                      Quit button
     Methods:
-    --------
         __init__(self): Initialize attributes and widgets
         save_file(self): Starts filedialog, reformat received string into path
         start(self): Opens sub-window with function and
@@ -74,17 +71,15 @@ class Window(tk.Tk):
         Window Class constructor to initialize objects
 
         Attributes:
-        -----------
-            title: str
-                   title of window
-            geometry: str
-                      window size
-            text: tk.Text
-                  places path to window
-            new_file: str
-                      contains path
+            self.title: str
+                        title of window
+            self.geometry: str
+                           window size
+            self.text: tk.Text
+                       places path to window
+            self.new_file: str
+                           contains path
         Widgets:
-        --------
             path_txt: tkinter.Label
                       Used for print chosen path
             op_label: tkinter.Label
@@ -182,13 +177,11 @@ class CalendarDialog(tk.Toplevel):
     Class used to start dialog with date choosing. Inherit tk.Toplevel.
 
     Attributes:
-    -----------
-        title: str
-               Window title
+        self.title: str
+                    Window title
         result: datetime obj
                 Date, chosen by user
     Widgets:
-    --------
         calendar: tkcalendar.Calendar
                   Calendar gui, if date chosen: configure date_label
         ok_button: tkinter.Button
@@ -197,10 +190,8 @@ class CalendarDialog(tk.Toplevel):
         date_label: tkinter.Label
                     Label with chosen date, changes by calendar.bind()
     Attributes:
-    -----------
         result: datetime.date obj
     Methods:
-    --------
         __init__(self): Initialize attributes and widgets
         check_date(self, event): Started when chose date. Change date_label
         ok_and_exit(self): Get selected date from calendar and return it
@@ -211,13 +202,11 @@ class CalendarDialog(tk.Toplevel):
         CalendarDialog Class constructor to initialize objects
 
         Attributes:
-        -----------
-            title: str
+            self.title: str
                    Window title
-            result: datetime obj
+            self.result: datetime obj
                     Date, chosen by user
         Widgets:
-        --------
             calendar: tkcalendar.Calendar
                       Calendar gui, if date chosen: configure date_label
             ok_button: tkinter.Button
@@ -225,9 +214,6 @@ class CalendarDialog(tk.Toplevel):
                        which get chosen date and close window
             date_label: tkinter.Label
                         Label with chosen date, changes by calendar.bind()
-            Attributes:
-            -----------
-                result: datetime.date obj
         """
         super().__init__()
 
@@ -279,7 +265,6 @@ class Widgets(tk.Toplevel):
     Inherit: tk.Toplevel, Heirs: Orders, Stocks, Cost
 
     Attributes:
-    -----------
         key: str
                name of function
         path: str
@@ -287,7 +272,6 @@ class Widgets(tk.Toplevel):
         param_dict: dict
               dict with parameters of function
     Widgets:
-    --------
         cancel_button: tkinter.Button
                        Button for cancel
         start_button: tkinter.Button
@@ -297,7 +281,6 @@ class Widgets(tk.Toplevel):
         label_text: tk.Label
                     Labels with name of function params
     Methods:
-    --------
         __init__(self): Initialize attributes and widgets
         param_checker(self): Checks some of the function params
                              from param_dict
@@ -307,7 +290,7 @@ class Widgets(tk.Toplevel):
         cancel(self): Opens ask window, if yes - close window
         start_convert(self): Opens sub-window with function params and
                              raise PermissionError
-                             Function must be overriden by heirs
+                             Function must be overridden by heirs
 
         saving(self): creates Getters and Converter objects, that save
                       result of request on path.
@@ -319,7 +302,6 @@ class Widgets(tk.Toplevel):
         Initialize attributes and widgets
 
         Attributes:
-        -----------
             Taken:
             :param key: name of function
             :type key: str
@@ -330,7 +312,6 @@ class Widgets(tk.Toplevel):
             param_dict: dict
 
         Widgets:
-        --------
             cancel_button: tkinter.Button
                            Button for cancel
             start_button: tkinter.Button
@@ -430,7 +411,7 @@ class Widgets(tk.Toplevel):
     def start_convert(self):
         """
         Opens sub-window with function params and raise PermissionError
-        Function must be overriden by heirs
+        Function must be overridden by heirs
         :raise: PermissionError
         """
         msgbox.showerror("Start",
@@ -462,15 +443,13 @@ class Orders(Widgets):
     Inherit: Widgets
 
     Attributes:
-    -----------
         key: str
              name of function
         path: str
               path to save file
-        param_dict: dict
-                    dict with parameters of function
+        self.param_dict: dict
+                         dict with parameters of function
     Widgets:
-    --------
         calendar_start_butt: tkinter.Button
                              Button for open date-choose window
         calendar_end_butt: tkinter.Button
@@ -484,10 +463,9 @@ class Orders(Widgets):
         id_num: tkinter.Entry
                 Entry to the int, 'take' parameter
     Methods:
-    --------
         __init__(self): Initialize attributes and widgets
         get_date(self, key): Open sub-window with date choose, then check it
-        start_convert(self): Function overriden from Widgets.
+        start_convert(self): Function overridden from Widgets.
                              Get params from widgets and pack into dict
                              After run Widgets.save(self)
     """
@@ -497,7 +475,6 @@ class Orders(Widgets):
     def __init__(self, key, path):
         """
         Attributes:
-        -----------
             Taken:
             :param key: name of function
             :type key: str
@@ -507,7 +484,6 @@ class Orders(Widgets):
             param_dict: dict with parameters of function
             param_dict: dict
         Widgets:
-        --------
             calendar_start_butt: tkinter.Button
                                  Button for open date-choose window
             calendar_end_butt: tkinter.Button
@@ -524,25 +500,36 @@ class Orders(Widgets):
         super().__init__(key, path)
 
         """ Widgets: """
-        self.calendar_start_butt = tk.Button(self, text='Choose date', command=lambda: self.get_date('date_start'))
+        self.calendar_start_butt = tk.Button(
+                                   self, text='Choose date',
+                                   command=lambda: self.get_date('date_start')
+                                   )
         self.calendar_start_butt.grid(column=1, row=0)
 
-        self.calendar_end_butt = tk.Button(self, text='Choose date', command=lambda: self.get_date('date_end'))
+        self.calendar_end_butt = tk.Button(
+                                 self, text='Choose date',
+                                 command=lambda: self.get_date('date_end')
+                                 )
         self.calendar_end_butt.grid(column=1, row=1)
 
         self.status_box = Combobox(self, state='readonly')
         self.status_box['values'] = Orders.STATUSES_LIST
         self.status_box.grid(column=1, row=2)
 
-        self.take_num = tk.Entry(self, validate='key', validatecommand=(self.valid_num_command, '%S'))
+        self.take_num = tk.Entry(self, validate='key',
+                                 validatecommand=(self.valid_num_command, '%S')
+                                 )
         self.take_num.grid(column=3, row=0)
         self.take_num.insert(0, 1000)
 
-        self.skip_num = tk.Entry(self, validate='key', validatecommand=(self.valid_num_command, '%S'))
+        self.skip_num = tk.Entry(self, validate='key',
+                                 validatecommand=(self.valid_num_command, '%S')
+                                 )
         self.skip_num.grid(column=3, row=1)
         self.skip_num.insert(0, 0)
 
-        self.id_num = tk.Entry(self, validate='key', validatecommand=(self.valid_num_command, '%S'))
+        self.id_num = tk.Entry(self, validate='key',
+                               validatecommand=(self.valid_num_command, '%S'))
         self.id_num.grid(column=3, row=2)
 
     def get_date(self, key):
@@ -564,7 +551,7 @@ class Orders(Widgets):
 
     def start_convert(self):
         """
-        Function overriden from Widgets.
+        Function overridden from Widgets.
         Get params from widgets and pack into dict
         After run Widgets.save(self)
         """
@@ -589,15 +576,13 @@ class Stocks(Widgets):
     Inherit: Widgets
 
     Attributes:
-    -----------
         key: str
              name of function
         path: str
               path to save file
-        param_dict: dict
-                    dict with parameters of function
+        self.param_dict: dict
+                         dict with parameters of function
     Widgets:
-    --------
         search: tkinter.Entry
                 Entry for all chars
         take_num: tkinter.Entry
@@ -609,9 +594,8 @@ class Stocks(Widgets):
         order_box: tkinter.ttk.Combobox
                     Combobox with 'order' parameter values
     Methods:
-    --------
         __init__(self): Initialize attributes and widgets
-        start_convert(self): Function overriden from Widgets.
+        start_convert(self): Function overridden from Widgets.
                              Get params from widgets and pack into dict
                              After run Widgets.save(self)
     """
@@ -619,15 +603,13 @@ class Stocks(Widgets):
         """
         Initialize attributes and widgets
         Attributes:
-        -----------
             key: str
                  name of function
             path: str
                   path to save file
-            param_dict: dict
-                        dict with parameters of function
+            self.param_dict: dict
+                             dict with parameters of function
         Widgets:
-        --------
             search: tkinter.Entry
                     Entry for all chars
             take_num: tkinter.Entry
@@ -645,11 +627,15 @@ class Stocks(Widgets):
         self.search = tk.Entry(self)
         self.search.grid(column=1, row=0)
 
-        self.take_num = tk.Entry(self, validate='key', validatecommand=(self.valid_num_command, '%S'))
+        self.take_num = tk.Entry(self, validate='key',
+                                 validatecommand=(self.valid_num_command, '%S')
+                                 )
         self.take_num.grid(column=1, row=1)
         self.take_num.insert(0, 1000)
 
-        self.skip_num = tk.Entry(self, validate='key', validatecommand=(self.valid_num_command, '%S'))
+        self.skip_num = tk.Entry(self, validate='key',
+                                 validatecommand=(self.valid_num_command, '%S')
+                                 )
         self.skip_num.grid(column=1, row=2)
         self.skip_num.insert(0, 0)
 
@@ -664,7 +650,7 @@ class Stocks(Widgets):
 
     def start_convert(self):
         """
-        Function overriden from Widgets.
+        Function overridden from Widgets.
         Get params from widgets and pack into dict
         After run Widgets.save(self)
         """

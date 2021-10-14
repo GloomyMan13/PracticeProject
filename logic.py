@@ -6,8 +6,11 @@ from datetime import timedelta, date
 import pandas as pd
 from login import headers
 
+#  Lists with params. Needed in Getters.__setparam and in gui
 RIGHT_SORT_LIST = ['subject', 'brand', 'name', 'size', 'barcode', 'articles']
 ORDER_LIST = ['asc', 'desc']
+
+#  Dict with key: url. Need for Getters.key
 KEYS = {
         'orders': 'https://suppliers-api.wildberries.ru/api/v2/orders?',
         'costs': "https://suppliers-api.wildberries.ru/public/api/v1/info?",
@@ -44,21 +47,45 @@ KEYS = {
 
 class Getters:
     """
-    Include objects with request.get
+    Creates full request string for function and make request
 
-    :method __setparam: Chose function for generating parameter string,
-                        base on key arg
-    :method __stocks: Generates parameter string for get.stocks
-    :method __orders: Generates parameter string for get.orders
-    :method __cost: Generates parameter string for get.costs
-    :method response: Unit url, parameters, headers and return
-                      result of request.get in JSON
+    Attributes:
+        key: str
+             Key from KEYS to take url-link for request
+        param_dict: dict
+                    parameters of get request,
+        head: CaseInsensitiveDict
+              headers of get requests from login.py
+
+    Methods:
+        __init__(self): Initialize attributes
+        __setparam: Takes key and needed params to create parameters
+                    string for GET request
+        __integer: Check by type(str(digits)) and create part of param string
+        __string: Check by type(str) and create part of param string
+        __date: Check by type(date) and reformat
+                date into right format (RFC3339)
+        __checker: Check needed of "&" sign between params
+        response: Unit url, parameters, headers and return
+                  result of request.get in JSON
     """
+
+    # Keys with same parameters. Need for __setparam
+    SAME_KEYS_LIST = ['gender', 'colors', 'countries', 'collections',
+                      'seasons', 'contents', 'consists', 'options',
+                      'si']
+
     def __init__(self, key, param_dict, head=headers):
         """
-        :param key: Link for request, str
-        :param head: headers of get requests, CaseInsensitiveDict
-        :param param_dict: parameters of get request, dict
+        Initialize attributes
+
+        Attributes:
+            key: str
+                 Key from KEYS to take url-link for request
+            param_dict: dict
+                        parameters of get request,
+            head: CaseInsensitiveDict
+                  headers of get requests from login.py
         """
 
         try:
@@ -69,19 +96,23 @@ class Getters:
         except AttributeError:
             print('Key must be a string')
 
+        if not isinstance(param_dict, dict):
+            raise AttributeError('param_dict must be a dict')
+        self.params = self.__setparam(key, param_dict)
+
         if isinstance(headers, requests.structures.CaseInsensitiveDict):
             self.headers = head
         else:
             raise ValueError('Headers must be a dict')
-        if not isinstance(param_dict, dict):
-            raise AttributeError('param_dict must be a dict')
-        self.params = self.__setparam(key, param_dict)
 
     @staticmethod
     def __setparam(key, param_dict):
         """
         Takes key and needed params to create parameters
         string for GET request
+
+        :return result: parameters string for GET request
+        :rtype: str
         """
 
         result = ''
@@ -244,8 +275,14 @@ class Getters:
     @staticmethod
     def __integer(param, param_name):
         """
-        Check by type and create part of param string
+        Check param by type and create part of param string
+
+        :param param: parameter
+        :type param: str(digits)
+        :param param_name: name of parameter
+        :type param_name: str
         """
+
         try:
             param = int(param)
         except ValueError:
@@ -256,8 +293,14 @@ class Getters:
     @staticmethod
     def __string(param, param_name):
         """
-        Check by type and create part of param string
+        Check param by type(str) and create part of param string
+
+        :param param: parameter
+        :type param: str
+        :param param_name: name of parameter
+        :type param_name: str
         """
+
         if isinstance(param, str):
             result = f'{param_name}={param}'
         else:
@@ -267,20 +310,29 @@ class Getters:
     @staticmethod
     def __date(param, param_name):
         """
-        Reformat datetime into right format (RFC3339)
+        Check by type(date) and reformat date into right format (RFC3339)
+
+        :param param: Year, month and day
+        :type param: date or None
+        :param param_name: date_start or date_end
+        :type param_name: str
         """
+
+        if not isinstance(param, (date, type(None))):
+            raise ValueError('date_end must be datetime.date or None obj')
         date_format = '%Y-%m-%dT'
         date_string = param.strftime(date_format)
         result = ''.join(f'{param_name}={date_string}' +
                          '00%3A00%3A00.000%2B10%3A00')
-        if not isinstance(param, (date, type(None))):
-            raise ValueError('date_end must be datetime or None obj')
         return result
 
     @staticmethod
     def __checker(string):
         """
         Check needed of "&" sign between params
+
+        :param string: parameter string
+        :type string: str
         """
         if string != 0:
             string += '&'
@@ -288,33 +340,67 @@ class Getters:
 
     def response(self):
         """
-        Get responses from url with params
+        Unit url, parameters, headers and return
+                  result of request.get in JSON
 
-        :return: response in JSON format
+        :return: requests.get().json()
+        :rtype: json
         """
         response = requests.get(self.link + self.params,
                                 headers=self.headers)
         return response.json()
 
-    SAME_KEYS_LIST = ['gender', 'colors', 'countries', 'collections',
-                      'seasons', 'contents', 'consists', 'options',
-                      'si']
-
 
 class Converter:
     """
-    Converts
+    Class for convert json into xlsx
+
+    Attributes:
+        path: str
+              path with filename
+        key: str
+             Function name
+        json: jSON
+              JSON array with results of Get request
+    Methods:
+        __init__: Initialize attributes
+        __error_check: Check errors in JSON array,
+                       takes needed fields from JSON
+        convert: Creates dataset from JSON,
+                 saves it to *.xlsx file by taken path
     """
     def __init__(self, my_path, key, json):
+        """
+        Initialize attributes
+
+        :param my_path: path with filename
+        :type my_path: str
+        :param key: Function name
+        :type key: str
+        :param json: JSON string with results of Get request
+        :type json: JSON
+        """
         self.path = path.normpath(my_path)
+
         if key in KEYS.keys():
             self.key = key
         else:
             raise AttributeError('Wrong command key')
-        self.json = Converter.__keygen(self.key, json)
+
+        self.json = Converter.__error_check(self.key, json)
 
     @staticmethod
-    def __keygen(key, json):
+    def __error_check(key, json):
+        """
+        Check errors in JSON array, takes needed fields from JSON
+
+        :param key: Function name
+        :type key: str
+        :param json: JSON array with results of Get request
+        :type json: JSON
+        :return: Reformatted JSON array
+        :rtype: JSON
+        """
         json_keys = list(json.keys())
         if 'error' in json_keys:
             if json['error']:
@@ -334,6 +420,12 @@ class Converter:
         return json
 
     def convert(self):
+        """
+        Creates dataset from JSON, saves it to *.xlsx file by taken path
+
+        :return: 'Done'
+        :rtype: str
+        """
         print(self.json)
         dataset = pd.json_normalize(self.json)
         my_path = path.split(self.path)[0]
