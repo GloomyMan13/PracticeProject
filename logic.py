@@ -2,7 +2,7 @@ import os
 import os.path as path
 import requests
 from requests.structures import CaseInsensitiveDict
-from datetime import datetime, timedelta
+from datetime import timedelta, date
 import pandas as pd
 from login import headers
 
@@ -10,23 +10,35 @@ RIGHT_SORT_LIST = ['subject', 'brand', 'name', 'size', 'barcode', 'articles']
 ORDER_LIST = ['asc', 'desc']
 KEYS = {
         'orders': 'https://suppliers-api.wildberries.ru/api/v2/orders?',
-        'warehouses': "https://suppliers-api.wildberries.ru/api/v2/warehouses?",
         'costs': "https://suppliers-api.wildberries.ru/public/api/v1/info?",
         'stocks': "https://suppliers-api.wildberries.ru/api/v2/stocks?",
-        'config': 'https://suppliers-api.wildberries.ru/api/v1/config/get/object/translated?',
-        'search by pattern': "https://suppliers-api.wildberries.ru/api/v1/config/get/object/list?",
-        'colors': 'https://suppliers-api.wildberries.ru/api/v1/directory/colors?',
-        'gender': 'https://suppliers-api.wildberries.ru/api/v1/directory/kinds?',
-        'countries': 'https://suppliers-api.wildberries.ru/api/v1/directory/countries?',
-        'collections': 'https://suppliers-api.wildberries.ru/api/v1/directory/collections?',
-        'seasons': 'https://suppliers-api.wildberries.ru/api/v1/directory/seasons?',
-        'contents': 'https://suppliers-api.wildberries.ru/api/v1/directory/contents?',
-        'consists': 'https://suppliers-api.wildberries.ru/api/v1/directory/consists?',
-        'tnved': 'https://suppliers-api.wildberries.ru/api/v1/directory/tnved?',
-        'options': 'https://suppliers-api.wildberries.ru/api/v1/directory/options?',
-        'brands': 'https://suppliers-api.wildberries.ru/api/v1/directory/brands?',
+        'config': 'https://suppliers-api.wildberries.ru/'
+                  'api/v1/config/get/object/translated?',
+        'search by pattern': "https://suppliers-api.wildberries.ru/"
+                             "api/v1/config/get/object/list?",
+        'colors': 'https://suppliers-api.wildberries.ru/'
+                  'api/v1/directory/colors?',
+        'gender': 'https://suppliers-api.wildberries.ru/'
+                  'api/v1/directory/kinds?',
+        'countries': 'https://suppliers-api.wildberries.ru/'
+                     'api/v1/directory/countries?',
+        'collections': 'https://suppliers-api.wildberries.ru/'
+                       'api/v1/directory/collections?',
+        'seasons': 'https://suppliers-api.wildberries.ru/'
+                   'api/v1/directory/seasons?',
+        'contents': 'https://suppliers-api.wildberries.ru/'
+                    'api/v1/directory/contents?',
+        'consists': 'https://suppliers-api.wildberries.ru/'
+                    'api/v1/directory/consists?',
+        'tnved': 'https://suppliers-api.wildberries.ru/'
+                 'api/v1/directory/tnved?',
+        'options': 'https://suppliers-api.wildberries.ru/'
+                   'api/v1/directory/options?',
+        'brands': 'https://suppliers-api.wildberries.ru/'
+                  'api/v1/directory/brands?',
         'si': 'https://suppliers-api.wildberries.ru/api/v1/directory/si?',
-        'list': 'https://suppliers-api.wildberries.ru/api/v1/directory/get/list'
+        'list': 'https://suppliers-api.wildberries.ru/'
+                'api/v1/directory/get/list'
     }
 
 
@@ -34,11 +46,13 @@ class Getters:
     """
     Include objects with request.get
 
-    :method __setparam: Chose function for generating parameter string, base on key arg
+    :method __setparam: Chose function for generating parameter string,
+                        base on key arg
     :method __stocks: Generates parameter string for get.stocks
     :method __orders: Generates parameter string for get.orders
     :method __cost: Generates parameter string for get.costs
-    :method response: Unit url, parameters, headers and return result of request.get in JSON
+    :method response: Unit url, parameters, headers and return
+                      result of request.get in JSON
     """
     def __init__(self, key, param_dict, head=headers):
         """
@@ -65,20 +79,19 @@ class Getters:
 
     @staticmethod
     def __setparam(key, param_dict):
-        """name=None, pattern=None, parent=None, subject=None, lang='ru', top=1000, obj_id=None,
-                   date_start=(datetime.today() - timedelta(days=1)), date_end=None, status=None, take=1000, skip=0,
-                   order_id=None, search=None, sort=None, order=None, quantity=1):"""
         """
-        Takes key and needed params to create parameters string for GET request
+        Takes key and needed params to create parameters
+        string for GET request
         """
+
         result = ''
         if key == 'orders':
             STATUSES_LIST = [0, 1, 2, 3, 5, 6, 7]
             try:
                 date_start = param_dict['date_start']
             except KeyError:
-                date_start = (datetime.today() - timedelta(days=1))
-            if isinstance(date_start, datetime):
+                date_start = (date.today() - timedelta(days=1))
+            if isinstance(date_start, date):
                 result = Getters.__date(date_start, 'date_start')
             else:
                 raise ValueError('Date start must be a datetime object')
@@ -136,7 +149,8 @@ class Getters:
             if sort in RIGHT_SORT_LIST:
                 result += '&' + Getters.__string(sort, 'sort')
             elif sort is not None and sort not in RIGHT_SORT_LIST:
-                raise ValueError(f'Sort must be one of {RIGHT_SORT_LIST}, not {sort}')
+                raise ValueError(f'Sort must be one of {RIGHT_SORT_LIST},'
+                                 f'not {sort}')
             try:
                 order = param_dict['order']
             except KeyError:
@@ -144,7 +158,8 @@ class Getters:
             if order in ORDER_LIST:
                 result += '&' + Getters.__string(order, 'order')
             elif order is not None and order not in ORDER_LIST:
-                raise ValueError(f'Order must be one of {ORDER_LIST}, not {order}')
+                raise ValueError(f'Order must be one of {ORDER_LIST},'
+                                 f'not {order}')
         elif key == 'costs':
             QUANTITY_LIST = [1, 2, 0]
             try:
@@ -255,10 +270,10 @@ class Getters:
         Reformat datetime into right format (RFC3339)
         """
         date_format = '%Y-%m-%dT'
-        date = param.strftime(date_format)
-        result = ''.join(f'{param_name}={date}' +
+        date_string = param.strftime(date_format)
+        result = ''.join(f'{param_name}={date_string}' +
                          '00%3A00%3A00.000%2B10%3A00')
-        if not isinstance(param, (datetime, type(None))):
+        if not isinstance(param, (date, type(None))):
             raise ValueError('date_end must be datetime or None obj')
         return result
 
@@ -281,8 +296,9 @@ class Getters:
                                 headers=self.headers)
         return response.json()
 
-    SAME_KEYS_LIST = ['gender', 'colors', 'countries', 'collections', 'seasons', 'contents',
-                      'consists', 'options', 'si']
+    SAME_KEYS_LIST = ['gender', 'colors', 'countries', 'collections',
+                      'seasons', 'contents', 'consists', 'options',
+                      'si']
 
 
 class Converter:
@@ -299,9 +315,6 @@ class Converter:
 
     @staticmethod
     def __keygen(key, json):
-        if key == 'warehouses':
-            print(json[0])
-            return json[0]
         json_keys = list(json.keys())
         if 'error' in json_keys:
             if json['error']:
@@ -309,8 +322,11 @@ class Converter:
             elif json['data'] is None or json['data'] == []:
                 raise ValueError('Data is none')
         else:
-            EXCEPTION_LIST = ['config', 'search by pattern', 'colors', 'gender', 'countries', 'collections', 'seasons',
-                              'contents', 'consists', 'tnved', 'options', 'brands', 'si', 'list']
+            EXCEPTION_LIST = ['config', 'search by pattern', 'colors',
+                              'gender', 'countries', 'collections',
+                              'seasons', 'contents', 'consists',
+                              'tnved', 'options', 'brands',
+                              'si', 'list']
             if key in EXCEPTION_LIST:
                 json = json['data']
             else:
