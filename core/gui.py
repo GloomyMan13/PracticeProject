@@ -3,28 +3,17 @@ import tkinter as tk
 from tkinter import filedialog
 import tkinter.messagebox as msgbox
 from tkinter.ttk import Combobox
+import requests
 from tkcalendar import Calendar
-import errors
-import logic
+from log_code import errors
+from log_code.logs import exception
+from core import logic
 
 PARAMS = {
         'orders': ['date_start', 'date_end', 'status', 'take',
                    'skip', 'order_id'],
         'stocks': ['search', 'take', 'skip', 'sort', 'order'],
-        'costs': ['quantity'],
-        'config': ['name'],
-        'search by pattern': ['name', 'parent', 'lang'],
-        'tnved': ['obj_id', 'subject', 'pattern'],
-        'list': [],
-        'colors': ['top', 'pattern', 'id'],
-        'gender': ['top', 'pattern', 'id'],
-        'collections': ['top', 'pattern', 'id'],
-        'seasons': ['top', 'pattern', 'id'],
-        'contents': ['top', 'pattern', 'id'],
-        'consists': ['top', 'pattern', 'id'],
-        'options': ['top', 'pattern', 'id'],
-        'brands': ['top', 'pattern', 'id'],
-        'si': ['top', 'pattern', 'id']
+        'costs': ['quantity']
     }
 
 keys_list = list(PARAMS.keys())
@@ -145,6 +134,7 @@ class Window(tk.Tk):
             self.path_txt.configure(text=string)
             self.new_file = string
 
+    @exception
     def start(self):
         """
         Opens sub-window with function and give func name with path
@@ -152,7 +142,7 @@ class Window(tk.Tk):
         """
         if self.new_file is None:
             msgbox.showerror("ERROR", 'Filepath is not specified')
-            raise FileNotFoundError("Filepath is not specified")
+            raise FileNotFoundError('Filepath is not specified')
         elif self.func_box.get() == 'orders':
             wind = Orders(self.func_box.get(), self.new_file)
             wind.mainloop()
@@ -354,6 +344,7 @@ class Widgets(tk.Toplevel):
                 row = 0
                 column += 2
 
+    @exception
     def param_checker(self):
         """
         Checks some of the function params from param_dict
@@ -380,6 +371,7 @@ class Widgets(tk.Toplevel):
                                                 self.param_dict['skip'])
         return True
 
+    @exception
     def only_num(self, take):
         """
         Method for validator, check input chars, if digit - return True
@@ -408,6 +400,7 @@ class Widgets(tk.Toplevel):
         else:
             pass
 
+    @exception
     def start_convert(self):
         """
         Opens sub-window with function params and raise PermissionError
@@ -419,18 +412,39 @@ class Widgets(tk.Toplevel):
                          f"{self.param_dict} \n Func must be reassigned!")
         raise PermissionError('Func must be reassigned')
 
+    @exception
     def saving(self):
         """
         Creates Getters and Converter objects, that save
         result of request on path.
         Then ask in ask window about same function with another params
         """
+
         request = logic.Getters(self.key, self.param_dict)
-        logic.Converter(self.path, self.key, request.response()).convert()
+        try:
+            my_json = request.response()
+        except requests.exceptions.ConnectionError:
+            msgbox.showerror("Connection error",
+                             "Unable to connect with Wildberries. \n"
+                             "Check your network")
+            raise requests.exceptions.ConnectionError
+        try:
+            logic.Converter(self.path, self.key, my_json).convert()
+        except AttributeError:
+            msgbox.showerror('Error from server.',
+                             'Error from server, check logs')
+            raise AttributeError
+        except ValueError:
+            msgbox.showerror('Data is none',
+                             'Get empty data from server\n'
+                             'Try change request')
+            raise ValueError
         question = msgbox.askquestion("Another request?",
                                       "Want you create order request"
                                       "with another params?")
         if question == 'yes':
+            save_wind = Window()
+            save_wind.save_file()
             pass
         else:
             self.destroy()
@@ -532,6 +546,7 @@ class Orders(Widgets):
                                validatecommand=(self.valid_num_command, '%S'))
         self.id_num.grid(column=3, row=2)
 
+    @exception
     def get_date(self, key):
         """
         Open sub-window with date choose, then check it
@@ -668,5 +683,46 @@ class Stocks(Widgets):
             self.param_dict['order'] = self.order_box.get()
         else:
             self.param_dict['order'] = 'asc'
+        if Widgets.param_checker(self):
+            Widgets.saving(self)
+
+
+class Costs(Widgets):
+    """
+    Sub-window class for getting 'costs' function request with params
+    and saving it
+    Inherit: Widgets
+
+    Attributes:
+        key: str
+             name of function
+        path: str
+              path to save file
+        self.param_dict: dict
+                         dict with parameters of function
+    Widgets:
+        quantity_box: tkinter.ttk.Combobox
+                    Combobox with 'quantity' parameter values
+    Methods:
+        __init__(self): Initialize attributes and widgets
+        start_convert(self): Function overridden from Widgets.
+                             Get params from widgets and pack into dict
+                             After run Widgets.save(self)
+    """
+    
+    #  Values list for self.quantity_box
+    QUANTITY_LIST = [1, 2, 0]
+
+    def __init__(self, key, path):
+        super().__init__(key, path)
+
+        """ Widgets: """
+        self.quantity_box = Combobox(self, state='readonly')
+        self.quantity_box['values'] = self.QUANTITY_LIST
+        self.quantity_box.current(0)
+        self.quantity_box.grid(column=1, row=0)
+
+    def start_convert(self):
+        self.param_dict['quantity'] = self.quantity_box.get()
         if Widgets.param_checker(self):
             Widgets.saving(self)

@@ -4,7 +4,8 @@ import requests
 from requests.structures import CaseInsensitiveDict
 from datetime import timedelta, date
 import pandas as pd
-from login import headers
+from core.login import headers
+from log_code.logs import exception
 
 #  Lists with params. Needed in Getters.__setparam and in gui
 RIGHT_SORT_LIST = ['subject', 'brand', 'name', 'size', 'barcode', 'articles']
@@ -14,34 +15,7 @@ ORDER_LIST = ['asc', 'desc']
 KEYS = {
         'orders': 'https://suppliers-api.wildberries.ru/api/v2/orders?',
         'costs': "https://suppliers-api.wildberries.ru/public/api/v1/info?",
-        'stocks': "https://suppliers-api.wildberries.ru/api/v2/stocks?",
-        'config': 'https://suppliers-api.wildberries.ru/'
-                  'api/v1/config/get/object/translated?',
-        'search by pattern': "https://suppliers-api.wildberries.ru/"
-                             "api/v1/config/get/object/list?",
-        'colors': 'https://suppliers-api.wildberries.ru/'
-                  'api/v1/directory/colors?',
-        'gender': 'https://suppliers-api.wildberries.ru/'
-                  'api/v1/directory/kinds?',
-        'countries': 'https://suppliers-api.wildberries.ru/'
-                     'api/v1/directory/countries?',
-        'collections': 'https://suppliers-api.wildberries.ru/'
-                       'api/v1/directory/collections?',
-        'seasons': 'https://suppliers-api.wildberries.ru/'
-                   'api/v1/directory/seasons?',
-        'contents': 'https://suppliers-api.wildberries.ru/'
-                    'api/v1/directory/contents?',
-        'consists': 'https://suppliers-api.wildberries.ru/'
-                    'api/v1/directory/consists?',
-        'tnved': 'https://suppliers-api.wildberries.ru/'
-                 'api/v1/directory/tnved?',
-        'options': 'https://suppliers-api.wildberries.ru/'
-                   'api/v1/directory/options?',
-        'brands': 'https://suppliers-api.wildberries.ru/'
-                  'api/v1/directory/brands?',
-        'si': 'https://suppliers-api.wildberries.ru/api/v1/directory/si?',
-        'list': 'https://suppliers-api.wildberries.ru/'
-                'api/v1/directory/get/list'
+        'stocks': "https://suppliers-api.wildberries.ru/api/v2/stocks?"
     }
 
 
@@ -75,6 +49,7 @@ class Getters:
                       'seasons', 'contents', 'consists', 'options',
                       'si']
 
+    @exception
     def __init__(self, key, param_dict, head=headers):
         """
         Initialize attributes
@@ -92,9 +67,9 @@ class Getters:
             key = key.lower()
             self.link = KEYS[key]
         except KeyError:
-            print("Wrong keyword")
+            raise KeyError("Wrong keyword")
         except AttributeError:
-            print('Key must be a string')
+            raise AttributeError('Key must be a string')
 
         if not isinstance(param_dict, dict):
             raise AttributeError('param_dict must be a dict')
@@ -106,6 +81,7 @@ class Getters:
             raise ValueError('Headers must be a dict')
 
     @staticmethod
+    @exception
     def __setparam(key, param_dict):
         """
         Takes key and needed params to create parameters
@@ -201,78 +177,10 @@ class Getters:
                 raise ValueError('Quantity must be 1, 2 or 0')
             else:
                 result.join(f'quantity={quantity}')
-        elif key == 'config':
-            try:
-                name = param_dict['name']
-            except KeyError:
-                raise ValueError("Name can't be None, operation meaningless")
-            return Getters.__string(name, 'name')
-        elif key == 'search by pattern':
-            try:
-                pattern = param_dict['pattern']
-            except KeyError:
-                pattern = None
-            if pattern is not None:
-                result = Getters.__string(pattern, 'pattern')
-            try:
-                parent = param_dict['parent']
-            except KeyError:
-                parent = None
-            if parent is not None:
-                result += Getters.__checker(result)
-                result += Getters.__string(parent, 'parent')
-            try:
-                lang = param_dict['lang']
-            except KeyError:
-                lang = 'ru'
-            if lang == 'ru':
-                result += "&" + Getters.__string(lang, 'lang')
-            else:
-                raise ValueError('Lang must be ru')
-        elif key in Getters.SAME_KEYS_LIST:
-            try:
-                top = param_dict['top']
-            except KeyError:
-                top = 1000
-            result = Getters.__integer(top, 'top')
-            try:
-                pattern = param_dict['pattern']
-            except KeyError:
-                pattern = None
-            if pattern is not None:
-                result += '&' + Getters.__string(pattern, 'pattern')
-            try:
-                obj_id = param_dict['obj_id']
-            except KeyError:
-                obj_id = None
-            if obj_id is not None:
-                result += '&' + Getters.__integer(obj_id, 'id')
-        elif key == 'list':
-            return ''
-        elif key == 'tnved':
-            try:
-                subj_id = param_dict['subjectID']
-            except KeyError:
-                subj_id = None
-            if subj_id is not None:
-                result = Getters.__integer(subj_id, 'subjectID')
-            try:
-                subject = param_dict['subject']
-            except KeyError:
-                subject = None
-            if subject is not None:
-                result += Getters.__checker(result)
-                result += Getters.__string(subject, 'subject')
-            try:
-                pattern = param_dict['pattern']
-            except KeyError:
-                pattern = None
-            if pattern is not None:
-                result += Getters.__checker(result)
-                result += Getters.__string(pattern, 'pattern')
         return result
 
     @staticmethod
+    @exception
     def __integer(param, param_name):
         """
         Check param by type and create part of param string
@@ -291,6 +199,7 @@ class Getters:
         return result
 
     @staticmethod
+    @exception
     def __string(param, param_name):
         """
         Check param by type(str) and create part of param string
@@ -308,6 +217,7 @@ class Getters:
         return result
 
     @staticmethod
+    @exception
     def __date(param, param_name):
         """
         Check by type(date) and reformat date into right format (RFC3339)
@@ -369,6 +279,7 @@ class Converter:
         convert: Creates dataset from JSON,
                  saves it to *.xlsx file by taken path
     """
+    @exception
     def __init__(self, my_path, key, json):
         """
         Initialize attributes
@@ -390,6 +301,7 @@ class Converter:
         self.json = Converter.__error_check(self.key, json)
 
     @staticmethod
+    @exception
     def __error_check(key, json):
         """
         Check errors in JSON array, takes needed fields from JSON
@@ -403,20 +315,12 @@ class Converter:
         """
         json_keys = list(json.keys())
         if 'error' in json_keys:
-            if json['error']:
+            if json['error']:  # json['error'] have 2 args: True or False
                 raise AttributeError(json['errorText'])
             elif json['data'] is None or json['data'] == []:
                 raise ValueError('Data is none')
         else:
-            EXCEPTION_LIST = ['config', 'search by pattern', 'colors',
-                              'gender', 'countries', 'collections',
-                              'seasons', 'contents', 'consists',
-                              'tnved', 'options', 'brands',
-                              'si', 'list']
-            if key in EXCEPTION_LIST:
-                json = json['data']
-            else:
-                json = json[json_keys[0]]
+            json = json[json_keys[0]]
         return json
 
     def convert(self):
@@ -426,7 +330,6 @@ class Converter:
         :return: 'Done'
         :rtype: str
         """
-        print(self.json)
         dataset = pd.json_normalize(self.json)
         my_path = path.split(self.path)[0]
         if path.exists(my_path):
