@@ -8,6 +8,13 @@ from tkcalendar import Calendar
 from log_code import errors
 from log_code.logs import exception
 from core import logic
+import logging.config
+from log_code.log_config import config
+
+
+info_logger = logging.getLogger('info_log')
+logging.config.dictConfig(config)
+
 
 PARAMS = {
         'orders': ['date_start', 'date_end', 'status', 'take',
@@ -144,11 +151,17 @@ class Window(tk.Tk):
             msgbox.showerror("ERROR", 'Filepath is not specified')
             raise FileNotFoundError('Filepath is not specified')
         elif self.func_box.get() == 'orders':
-            wind = Orders(self.func_box.get(), self.new_file)
-            wind.mainloop()
+            order = Orders(self.func_box.get(), self.new_file)
+            order.mainloop()
+            return True
         elif self.func_box.get() == 'stocks':
-            wind = Stocks(self.func_box.get(), self.new_file)
-            wind.mainloop()
+            stock = Stocks(self.func_box.get(), self.new_file)
+            stock.mainloop()
+            return True
+        elif self.func_box.get() == 'costs':
+            cost = Costs(self.func_box.get(), self.new_file)
+            cost.mainloop()
+            return True
 
     def destroy(self):
         """
@@ -160,6 +173,9 @@ class Window(tk.Tk):
             tk.Tk.destroy(self)
         else:
             pass
+
+
+window = Window()
 
 
 class CalendarDialog(tk.Toplevel):
@@ -371,8 +387,9 @@ class Widgets(tk.Toplevel):
                                                 self.param_dict['skip'])
         return True
 
+    @staticmethod
     @exception
-    def only_num(self, take):
+    def only_num(take):
         """
         Method for validator, check input chars, if digit - return True
         :param take: string from tk.Entry
@@ -439,15 +456,7 @@ class Widgets(tk.Toplevel):
                              'Get empty data from server\n'
                              'Try change request')
             raise ValueError
-        question = msgbox.askquestion("Another request?",
-                                      "Want you create order request"
-                                      "with another params?")
-        if question == 'yes':
-            save_wind = Window()
-            save_wind.save_file()
-            pass
-        else:
-            self.destroy()
+        self.destroy()
 
 
 class Orders(Widgets):

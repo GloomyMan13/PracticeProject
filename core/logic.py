@@ -298,16 +298,14 @@ class Converter:
         else:
             raise AttributeError('Wrong command key')
 
-        self.json = Converter.__error_check(self.key, json)
+        self.json = Converter.__error_check(json)
 
     @staticmethod
     @exception
-    def __error_check(key, json):
+    def __error_check(json):
         """
         Check errors in JSON array, takes needed fields from JSON
 
-        :param key: Function name
-        :type key: str
         :param json: JSON array with results of Get request
         :type json: JSON
         :return: Reformatted JSON array
